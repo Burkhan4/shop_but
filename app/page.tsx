@@ -95,26 +95,42 @@ export default function Home() {
   );
   const totalCount = cartList.reduce((sum, item) => sum + item.count, 0);
 
-  const handleCheckout = () => {
-    if (typeof window !== "undefined") {
-      const tg = (window as any).Telegram?.WebApp;
+  const handleCheckout = async () => {
+    if (typeof window === "undefined") return;
+    const tg = (window as any).Telegram?.WebApp;
 
-      if (tg) {
-        // Формируем полезную нагрузку заказа
-        const orderPayload = {
-          items: cartList.map((item) => ({
-            id: item.id,
-            title: item.title,
-            count: item.count,
-            price: item.price,
-          })),
-          totalAmount,
-        };
+    const orderText =
+      `⚡ <b>Новый заказ!</b>\n\n` +
+      `👤 <b>Покупатель:</b> ${tg?.initDataUnsafe?.user?.first_name || "Гость"} (@${tg?.initDataUnsafe?.user?.username || "-"})\n\n` +
+      `📦 <b>Товары:</b>\n` +
+      cartList
+        .map(
+          (i) =>
+            `▫️ ${i.title} — ${i.count} шт. по ${i.price.toLocaleString()} UZS`,
+        )
+        .join("\n") +
+      `\n\n💰 <b>Итого:</b> ${totalAmount.toLocaleString()} UZS`;
 
-        // Отправляем данные боту и закрываем окно Web App
-        tg.sendData(JSON.stringify(orderPayload));
-        tg.close();
-      }
+    const chatId = tg?.initDataUnsafe?.user?.id;
+
+    if (chatId) {
+      // Отправляем сообщение напрямую через Telegram API от лица бота
+      await fetch(
+        `https://api.telegram.org/bot8656656250:AAFRemPEZIDozmJPKHV__FSqr_3TrTjz3Xw/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: orderText,
+            parse_mode: "HTML",
+          }),
+        },
+      );
+    }
+
+    if (tg) {
+      tg.close();
     }
   };
 
