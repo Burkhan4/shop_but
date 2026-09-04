@@ -21,21 +21,24 @@ const PRODUCTS: Product[] = [
     title: "Букет роз «Премиум»",
     price: 250000,
     category: "Цветы",
-    image: "https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=500&q=80",
+    image:
+      "https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=500&q=80",
   },
   {
     id: 2,
     title: "Пионы микс",
     price: 320000,
     category: "Цветы",
-    image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=500&q=80",
+    image:
+      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=500&q=80",
   },
   {
     id: 3,
     title: "Фирменная открытка",
     price: 25000,
     category: "Подарки",
-    image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&q=80",
+    image:
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&q=80",
   },
 ];
 
@@ -86,11 +89,33 @@ export default function Home() {
   };
 
   const cartList = Object.values(cart);
-  const totalAmount = cartList.reduce((sum, item) => sum + item.price * item.count, 0);
+  const totalAmount = cartList.reduce(
+    (sum, item) => sum + item.price * item.count,
+    0,
+  );
   const totalCount = cartList.reduce((sum, item) => sum + item.count, 0);
 
   const handleCheckout = () => {
-    alert(`Заказ оформлен на сумму: ${totalAmount.toLocaleString()} UZS`);
+    if (typeof window !== "undefined") {
+      const tg = (window as any).Telegram?.WebApp;
+
+      if (tg) {
+        // Формируем полезную нагрузку заказа
+        const orderPayload = {
+          items: cartList.map((item) => ({
+            id: item.id,
+            title: item.title,
+            count: item.count,
+            price: item.price,
+          })),
+          totalAmount,
+        };
+
+        // Отправляем данные боту и закрываем окно Web App
+        tg.sendData(JSON.stringify(orderPayload));
+        tg.close();
+      }
+    }
   };
 
   return (
@@ -99,7 +124,9 @@ export default function Home() {
       <header className="mb-4 text-center">
         <h1 className="text-xl font-bold text-slate-900">Цветочная лавка</h1>
         <p className="text-xs text-slate-500 mt-1">
-          {userName ? `Привет, ${userName}!` : "Заказ букетов с быстрой доставкой"}
+          {userName
+            ? `Привет, ${userName}!`
+            : "Заказ букетов с быстрой доставкой"}
         </p>
       </header>
 
@@ -167,7 +194,9 @@ export default function Home() {
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur border-t border-slate-200 shadow-lg">
           <div className="max-w-md mx-auto flex items-center justify-between gap-4">
             <div>
-              <div className="text-xs text-slate-500">Итого ({totalCount} шт.)</div>
+              <div className="text-xs text-slate-500">
+                Итого ({totalCount} шт.)
+              </div>
               <div className="text-base font-extrabold text-slate-900">
                 {totalAmount.toLocaleString()} UZS
               </div>
